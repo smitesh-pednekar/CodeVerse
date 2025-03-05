@@ -1,14 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
+import { Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Code2, Copy, LogOut, Play, Send, Users, MessageSquare, Terminal } from "lucide-react";
 import ACTIONS from "../Actions";
 import Client from "../components/Client";
 import Editor from "../components/Editor";
 import { initSocket } from "../socket";
-import {
-  Navigate,
-  useLocation,
-  useNavigate,
-  useParams,
-} from "react-router-dom";
 import { toast } from "react-hot-toast";
 import axios from "axios";
 
@@ -19,6 +15,8 @@ const EditorPage = () => {
   const reactNavigator = useNavigate();
   const { roomId } = useParams();
   const [clients, setClients] = useState([]);
+  const [activeTab, setActiveTab] = useState('input');
+  const [isChatOpen, setIsChatOpen] = useState(true);
 
   useEffect(() => {
     const init = async () => {
@@ -38,7 +36,6 @@ const EditorPage = () => {
         username: location.state?.username,
       });
 
-      //Listening for joined event
       socketRef.current.on(
         ACTIONS.JOINED,
         ({ clients, username, socketId }) => {
@@ -54,7 +51,6 @@ const EditorPage = () => {
         }
       );
 
-      //Listeing for disconnected
       socketRef.current.on(ACTIONS.DISCONNECTED, ({ socketId, username }) => {
         toast.success(`${username} left the room.`);
         setClients((prev) => {
@@ -62,25 +58,26 @@ const EditorPage = () => {
         });
       });
 
-      //Listening for message
       socketRef.current.on(ACTIONS.SEND_MESSAGE, ({ message }) => {
         const chatWindow = document.getElementById("chatWindow");
-        var currText = chatWindow.value;
-        currText += message;
-        chatWindow.value = currText;
-        chatWindow.scrollTop = chatWindow.scrollHeight;
+        if (chatWindow) {
+          var currText = chatWindow.value;
+          currText += message;
+          chatWindow.value = currText;
+          chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
       });
     };
     init();
     return () => {
-      socketRef.current.off(ACTIONS.JOINED);
-      socketRef.current.off(ACTIONS.DISCONNECTED);
-      socketRef.current.off(ACTIONS.SEND_MESSAGE);
-      socketRef.current.disconnect();
+      socketRef.current?.off(ACTIONS.JOINED);
+      socketRef.current?.off(ACTIONS.DISCONNECTED);
+      socketRef.current?.off(ACTIONS.SEND_MESSAGE);
+      socketRef.current?.disconnect();
     };
   }, []);
 
-  async function copyRoomId() {
+  const copyRoomId = async () => {
     try {
       await navigator.clipboard.writeText(roomId);
       toast.success("Room ID has been copied to your clipboard");
@@ -88,100 +85,111 @@ const EditorPage = () => {
       toast.error("Could not copy the room id");
       console.error(err);
     }
-  }
+  };
 
-  function leaveRoom() {
+  const leaveRoom = () => {
     reactNavigator("/");
-  }
-
-  if (!location.state) {
-    return <Navigate to="/" />;
-  }
+  };
 
   const inputClicked = () => {
+    setActiveTab('input');
     const inputArea = document.getElementById("input");
-    inputArea.placeholder = "Enter your input here";
-    inputArea.value = "";
-    inputArea.disabled = false;
-    const inputLabel = document.getElementById("inputLabel");
-    const outputLabel = document.getElementById("outputLabel");
-    inputLabel.classList.remove("notClickedLabel");
-    inputLabel.classList.add("clickedLabel");
-    outputLabel.classList.remove("clickedLabel");
-    outputLabel.classList.add("notClickedLabel");
+    if (inputArea) {
+      inputArea.placeholder = "Enter your input here";
+      inputArea.value = "";
+      inputArea.disabled = false;
+    }
   };
 
   const outputClicked = () => {
+    setActiveTab('output');
     const inputArea = document.getElementById("input");
-    inputArea.placeholder =
-      "You output will apear here, Click 'Run code' to see it";
-    inputArea.value = "";
-    inputArea.disabled = true;
-    const inputLabel = document.getElementById("inputLabel");
-    const outputLabel = document.getElementById("outputLabel");
-    inputLabel.classList.remove("clickedLabel");
-    inputLabel.classList.add("notClickedLabel");
-    outputLabel.classList.remove("notClickedLabel");
-    outputLabel.classList.add("clickedLabel");
+    if (inputArea) {
+      inputArea.placeholder = "Your output will appear here, Click 'Run code' to see it";
+      inputArea.value = "";
+      inputArea.disabled = true;
+    }
   };
 
   const runCode = () => {
-    const lang = document.getElementById("languageOptions").value;
-    const input = document.getElementById("input").value;
+    const lang = document.getElementById("languageOptions")?.value;
+    const input = document.getElementById("input")?.value;
     const code = codeRef.current;
+
+    if (!lang || !code) return;
 
     toast.loading("Running Code....");
 
-    const encodedParams = new URLSearchParams();
-    encodedParams.append("LanguageChoice", lang);
-    encodedParams.append("Program", code);
-    encodedParams.append("Input", input);
+    const data = {
+      source_code: code,
+      language_id: parseInt(lang),
+      stdin: input,
+    };
 
     const options = {
       method: "POST",
-      url: "https://code-compiler.p.rapidapi.com/v2",
+      url: "https://judge029.p.rapidapi.com/submissions",
       headers: {
-        "content-type": "application/x-www-form-urlencoded",
-        "X-RapidAPI-Key": process.env.REACT_APP_API_KEY,
-        "X-RapidAPI-Host": "code-compiler.p.rapidapi.com",
+        "content-type": "application/json",
+        "X-RapidAPI-Key": "a52ee53b55msh54c87a8c6f3fc4fp112c59jsn6d15c8df96d0",
+        "X-RapidAPI-Host": "judge029.p.rapidapi.com"
       },
-      data: encodedParams,
+      params: {
+        base64_encoded: "false",
+        wait: "true",
+        fields: "*"
+      },
+      data: data,
     };
-
-    console.log(options);
 
     axios
       .request(options)
       .then(function (response) {
-        let message = response.data.Result;
-        if (message === null) {
-          message = response.data.Errors;
+        let output = "";
+        
+        if (response.data.stdout) {
+          output = response.data.stdout;
+        } else if (response.data.stderr) {
+          output = response.data.stderr;
+        } else if (response.data.compile_output) {
+          output = response.data.compile_output;
+        } else if (response.data.message) {
+          output = response.data.message;
         }
+        
         outputClicked();
-        document.getElementById("input").value = message;
+        const inputArea = document.getElementById("input");
+        if (inputArea) {
+          inputArea.value = output || "No output generated";
+        }
         toast.dismiss();
         toast.success("Code compilation complete");
       })
       .catch(function (error) {
+        console.error("API Error:", error);
         toast.dismiss();
         toast.error("Code compilation unsuccessful");
-        document.getElementById("input").value =
-          "Something went wrong, Please check your code and input.";
+        const inputArea = document.getElementById("input");
+        if (inputArea) {
+          inputArea.value = "Something went wrong. Please check your code and input.";
+        }
       });
   };
 
   const sendMessage = () => {
-    if (document.getElementById("inputBox").value === "") return;
-    var message = `> ${location.state.username}:\n${
-      document.getElementById("inputBox").value
-    }\n`;
+    const inputBox = document.getElementById("inputBox");
+    if (!inputBox?.value) return;
+    
+    var message = `> ${location.state.username}:\n${inputBox.value}\n`;
     const chatWindow = document.getElementById("chatWindow");
-    var currText = chatWindow.value;
-    currText += message;
-    chatWindow.value = currText;
-    chatWindow.scrollTop = chatWindow.scrollHeight;
-    document.getElementById("inputBox").value = "";
-    socketRef.current.emit(ACTIONS.SEND_MESSAGE, { roomId, message });
+    if (chatWindow) {
+      var currText = chatWindow.value;
+      currText += message;
+      chatWindow.value = currText;
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+    inputBox.value = "";
+    socketRef.current?.emit(ACTIONS.SEND_MESSAGE, { roomId, message });
   };
 
   const handleInputEnter = (key) => {
@@ -190,103 +198,196 @@ const EditorPage = () => {
     }
   };
 
+  if (!location.state) {
+    return <Navigate to="/" />;
+  }
+
   return (
-    <div className="mainWrap">
-      <div className="asideWrap">
-        <div className="asideInner">
-          <div className="logo">
-            <img className="logoImage" src="/code-sync.png" alt="logo" />
-          </div>
-          <h3>Connected</h3>
-          <div className="clientsList">
-            {clients.map((client) => (
-              <Client key={client.socketId} username={client.username} />
-            ))}
+    <div className="h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex overflow-hidden">
+      {/* Left Sidebar */}
+      <div className="w-56 bg-gray-900 flex flex-col border-r border-gray-700/50">
+        <div className="p-4 border-b border-gray-700/50">
+          <div className="flex items-center space-x-2">
+            <Code2 className="w-6 h-6 text-blue-400" />
+            <h1 className="text-xl font-bold text-white">CodeVerse</h1>
           </div>
         </div>
-        <label>
-          Select Language:
-          <select id="languageOptions" className="seLang" defaultValue="17">
-            <option value="1">C#</option>
-            <option value="4">Java</option>
-            <option value="5">Python</option>
-            <option value="6">C (gcc)</option>
-            <option value="7">C++ (gcc)</option>
-            <option value="8">PHP</option>
-            <option value="11">Haskell</option>
-            <option value="12">Ruby</option>
-            <option value="13">Perl</option>
-            <option value="17">Javascript</option>
-            <option value="20">Golang</option>
-            <option value="21">Scala</option>
-            <option value="37">Swift</option>
-            <option value="38">Bash</option>
-            <option value="43">Kotlin</option>
-            <option value="60">TypeScript</option>
-          </select>
-        </label>
-        <button className="btn runBtn" onClick={runCode}>
-          Run Code
-        </button>
-        <button className="btn copyBtn" onClick={copyRoomId}>
-          Copy ROOM ID
-        </button>
-        <button className="btn leaveBtn" onClick={leaveRoom}>
-          Leave
-        </button>
-      </div>
 
-      <div className="editorWrap">
-        <Editor
-          socketRef={socketRef}
-          roomId={roomId}
-          onCodeChange={(code) => {
-            codeRef.current = code;
-          }}
-        />
-        <div className="IO-container">
-          <label
-            id="inputLabel"
-            className="clickedLabel"
-            onClick={inputClicked}
-          >
-            Input
-          </label>
-          <label
-            id="outputLabel"
-            className="notClickedLabel"
-            onClick={outputClicked}
-          >
-            Output
-          </label>
+        <div className="flex-1 p-4 space-y-6 overflow-y-auto">
+          {/* Connected Users */}
+          <div>
+            <h3 className="text-gray-400 text-sm font-medium mb-3 flex items-center">
+              <Users className="w-4 h-4 mr-2" />
+              Connected ({clients.length})
+            </h3>
+            <div className="space-y-2">
+              {clients.map((client) => (
+                <Client key={client.socketId} username={client.username} />
+              ))}
+            </div>
+          </div>
+
+          {/* Language Selector */}
+          <div>
+            <label className="text-gray-400 text-sm block mb-2">Language</label>
+            <select
+              id="languageOptions"
+              className="w-full bg-gray-800 text-white rounded-lg p-2 border border-gray-700 hover:border-blue-500 transition-colors"
+              defaultValue="71"
+            >
+              <option value="71">Python3</option>
+              <option value="50">C</option>
+              <option value="54">C++</option>
+              <option value="62">Java</option>
+              <option value="63">JavaScript</option>
+              <option value="74">TypeScript</option>
+              <option value="51">C#</option>
+              <option value="68">PHP</option>
+              <option value="72">Ruby</option>
+              <option value="73">Rust</option>
+              <option value="60">Go</option>
+              <option value="78">Kotlin</option>
+              <option value="83">Swift</option>
+            </select>
+          </div>
         </div>
-        <textarea
-          id="input"
-          className="inputArea textarea-style"
-          placeholder="Enter your input here"
-        ></textarea>
-      </div>
 
-      <div className="chatWrap">
-        <textarea
-          id="chatWindow"
-          className="chatArea textarea-style"
-          placeholder="Chat messages will appear here"
-          disabled
-        ></textarea>
-        <div className="sendChatWrap">
-          <input
-            id="inputBox"
-            type="text"
-            placeholder="Type your message here"
-            className="inputField"
-            onKeyUp={handleInputEnter}
-          ></input>
-          <button className="btn sendBtn" onClick={sendMessage}>
-            Send
+        {/* Bottom Actions */}
+        <div className="p-4 space-y-2 border-t border-gray-700/50">
+          <button
+            onClick={runCode}
+            className="w-full flex items-center justify-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white p-2 rounded-lg transition-colors"
+          >
+            <Play className="w-4 h-4" />
+            <span>Run Code</span>
+          </button>
+
+          <button
+            onClick={copyRoomId}
+            className="w-full flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg transition-colors"
+          >
+            <Copy className="w-4 h-4" />
+            <span>Copy Room ID</span>
+          </button>
+
+          <button
+            onClick={leaveRoom}
+            className="w-full flex items-center justify-center space-x-2 bg-red-600/20 hover:bg-red-600/30 text-red-500 p-2 rounded-lg transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Leave Room</span>
           </button>
         </div>
       </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        {/* Editor Section with Header */}
+        <div className="flex-1 bg-gray-900 flex flex-col">
+          {/* macOS-style Header */}
+          <div className="h-8 bg-[#1e1e1e] flex items-center px-3 border-b border-gray-700/50">
+  <div className="flex space-x-2">
+    <div className="w-3 h-3 rounded-full bg-[#ff5f56] ring-1 ring-[#ff5f56]/50 shadow-lg" />
+    <div className="w-3 h-3 rounded-full bg-[#ffbd2e] ring-1 ring-[#ffbd2e]/50 shadow-lg" />
+    <div className="w-3 h-3 rounded-full bg-[#27c93f] ring-1 ring-[#27c93f]/50 shadow-lg" />
+  </div>
+</div>
+          </div>
+        {/* Editor Section */}
+        <div className="flex-1 bg-gray-900">
+          <Editor
+            socketRef={socketRef}
+            roomId={roomId}
+            onCodeChange={(code) => {
+              codeRef.current = code;
+            }}
+          />
+        </div>
+
+        {/* Input/Output Section */}
+        <div className="h-52 bg-gray-900 border-t border-gray-700/50">
+          <div className="flex border-b border-gray-700/50">
+            <button
+              onClick={inputClicked}
+              className={`px-6 py-3 flex items-center space-x-2 ${
+                activeTab === 'input'
+                  ? 'text-blue-400 border-b-2 border-blue-400 bg-gray-800/50'
+                  : 'text-gray-400 hover:text-gray-300 hover:bg-gray-800/30'
+              }`}
+            >
+              <Terminal className="w-4 h-4" />
+              <span>Input</span>
+            </button>
+            <button
+              onClick={outputClicked}
+              className={`px-6 py-3 flex items-center space-x-2 ${
+                activeTab === 'output'
+                  ? 'text-blue-400 border-b-2 border-blue-400 bg-gray-800/50'
+                  : 'text-gray-400 hover:text-gray-300 hover:bg-gray-800/30'
+              }`}
+            >
+              <Terminal className="w-4 h-4" />
+              <span>Output</span>
+            </button>
+          </div>
+          <textarea
+            id="input"
+            className="w-full h-36 bg-gray-900 text-gray-300 p-4 resize-none focus:outline-none font-mono"
+            placeholder="Enter your input here"
+          />
+        </div>
+      </div>
+
+      {/* Right Chat Panel */}
+      <div className={`w-80 bg-gray-900 border-l border-gray-700/50 flex flex-col transition-all duration-300 ${isChatOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+        <div className="p-4 border-b border-gray-700/50 flex justify-between items-center">
+          <div className="flex items-center space-x-2 text-gray-300">
+            <MessageSquare className="w-4 h-4" />
+            <span>Chat</span>
+          </div>
+          <button
+            onClick={() => setIsChatOpen(false)}
+            className="text-gray-500 hover:text-gray-400"
+          >
+            ×
+          </button>
+        </div>
+        <div className="flex-1 p-4">
+          <textarea
+            id="chatWindow"
+            className="w-full h-full bg-gray-800 text-gray-300 p-4 rounded-lg resize-none focus:outline-none"
+            placeholder="Chat messages will appear here"
+            disabled
+          />
+        </div>
+        <div className="p-4 border-t border-gray-700/50">
+          <div className="flex space-x-2">
+            <input
+              id="inputBox"
+              type="text"
+              className="flex-1 bg-gray-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Type your message..."
+              onKeyUp={handleInputEnter}
+            />
+            <button
+              onClick={sendMessage}
+              className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg transition-colors"
+            >
+              <Send className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Chat Toggle Button (shown when chat is closed) */}
+      {!isChatOpen && (
+        <button
+          onClick={() => setIsChatOpen(true)}
+          className="fixed right-4 bottom-4 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-colors"
+        >
+          <MessageSquare className="w-5 h-5" />
+        </button>
+      )}
     </div>
   );
 };
