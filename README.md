@@ -1,76 +1,88 @@
-Demo Video:
+# CodeVerse 🌌✨  
+**Real-Time Collaborative Code Editor with Multi-Language Execution**  
+*Where developers orbit together in coding harmony*  
 
+[![React](https://img.shields.io/badge/React-17.0.2-%2361DAFB?logo=react)](https://reactjs.org/)
+[![Socket.io](https://img.shields.io/badge/Socket.io-4.4.1-%23010101?logo=socket.io)](https://socket.io/)
+[![Judge0](https://img.shields.io/badge/Judge0-API-%234B32C3)](https://judge0.com/)
 
-https://user-images.githubusercontent.com/65965671/224958307-09ef011a-f028-4a45-b55c-41eb60616ff8.mp4
+![CodeVerse Demo](https://via.placeholder.com/800x400.png?text=CodeVerse+Demo+GIF+Here)  
+*(Replace with actual screenshot/gif of your editor in action)*
 
+## 🚀 Features  
+- **Real-Time Collaboration**  
+  👥 Multi-user editing with live cursor synchronization  
+  🌐 Instant code changes propagation using Socket.io  
 
-# Getting Started with Create React App
+- **Code Playground**  
+  🧑‍💻 Support for 12+ languages (Python, JavaScript, Java, C++, etc.)  
+  ⚡ Integrated code execution via Judge0 API  
+  📊 Real-time input/output management  
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+- **Developer Ecosystem**  
+  💬 Live chat system for team communication  
+  👤 User presence visualization with React Avatars  
+  📋 Room ID management with one-click copy  
+  🎨 CodeMirror editor with Dracula theme & auto-completion  
 
-## Available Scripts
+## ⚙️ Tech Stack  
+**Frontend**  
+🟢 React | 🟣 Redux (if used) | 🟠 Tailwind CSS  
+**Backend**  
+🔵 Node.js | 🧔 Express | 🔴 Socket.io  
+**Services**  
+⚫ Judge0 API | 🟡 UUID | 🔵 React Hot Toast  
 
-In the project directory, you can run:
+## 🛠️ Installation  
+1. **Clone the repository**  
+   ```bash
+   git clone https://github.com/yourusername/codeverse.git
+   cd codeverse
+   ```
+2. **Install dependencies**  
+   ```bash
+   npm install
+   ```
+3. **Set up environment**  
+   Create `.env` file:  
+   ```env
+   REACT_APP_BACKEND_URL=http://localhost:5001
+   ```
+4. **Launch the universe**  
+   ```bash
+   npm start
+   ```  
+   **Frontend:** `localhost:3000` | **Backend:** `localhost:5001`  
 
-### `npm run server:dev`
+## 🌌 Getting Started  
+### **Create/Join a Room**  
+#### Homepage  
+- Generate new room ID or join an existing one  
+- Set your developer identity  
 
-Runs the app in the development mode.\
-Open [http://localhost:5001] to view it in your browser.
+### **Code Together**  
+#### Editor  
+- Write code in any supported language  
+- See collaborators' cursors in real-time  
+- Use chat for instant communication  
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### **Execute & Debug**  
+#### Execution  
+- Run code with custom input  
+- View compilation results instantly  
+- Share output with room members  
 
-### `npm test`
+## 🤝 Contributing  
+**Space for more astronauts! Contributions are welcome:**  
+1. Fork the repository  
+2. Create your feature branch  
+3. Commit your changes  
+4. Push to the branch  
+5. Open a Pull Request  
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## 📝 License  
+Distributed under the MIT License. See `LICENSE` for more information.  
 
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+---  
+Made with 🚀 by [Your Name]  
+Keep coding among the stars! 🌠
