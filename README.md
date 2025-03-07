@@ -6,9 +6,6 @@
 [![Socket.io](https://img.shields.io/badge/Socket.io-4.4.1-%23010101?logo=socket.io)](https://socket.io/)
 [![Judge0](https://img.shields.io/badge/Judge0-API-%234B32C3)](https://judge0.com/)
 
-![CodeVerse Demo](https://via.placeholder.com/800x400.png?text=CodeVerse+Demo+GIF+Here)  
-*(Replace with actual screenshot/gif of your editor in action)*
-
 ## 🚀 Features  
 - **Real-Time Collaboration**  
   👥 Multi-user editing with live cursor synchronization  
